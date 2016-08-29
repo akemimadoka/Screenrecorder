@@ -21,7 +21,6 @@
 #define new DEBUG_NEW
 #endif
 
-typedef unsigned int uint;
 typedef std::basic_string<TCHAR> tstring;
 
 // 全局变量
@@ -258,7 +257,7 @@ void CscreenrecorderDlg::OnBnClickedBnstart()
 	// 默认压缩系数是7500，暂时不允许修改
 	// 范围为0到10000，10000为不压缩
 	// 7500足够了【确信
-	InitAVI(globalvars::hDCtmp, m_hWnd, text, 7500ul, (bool)(m_Ckrecordaudio.GetCheck() > 0));
+	InitAVI(globalvars::hDCtmp, m_hWnd, text, 7500ul, m_Ckrecordaudio.GetCheck() > 0);
 
 	SetTimer(Rec, static_cast<UINT>(1000.0f / GetFPS()), NULL);
 }
@@ -337,11 +336,11 @@ void CscreenrecorderDlg::OnTimer(UINT_PTR nIDEvent)
 			}
 		}
 	}
-	catch (error_description e)
+	catch (std::exception& e)
 	{
 		auto err = GetLastError();
 		CString msg;
-		msg.Format(_T("发生错误：%s\n错误号：%lu"), e, err);
+		msg.Format(_T("发生错误：%hs\n错误号：%lu"), e.what(), err);
 		MessageBox(msg, _T("错误"), MB_OK | MB_ICONERROR);
 		throw;
 	}
@@ -371,7 +370,7 @@ void CscreenrecorderDlg::OnBnClickedBnselectfile()
 	}
 	
 	CString filename, fileext{ fd.GetFileExt() };
-	filename.Format(_T("%s.%s"), fd.GetPathName(), fileext.IsEmpty() ? _T("avi") : fileext);
+	filename.Format(_T("%s.%s"), fd.GetPathName().GetString(), fileext.IsEmpty() ? _T("avi") : fileext.GetString());
 	m_EditFilename.SetWindowText(filename);
 	
 	UpdateData(FALSE);
@@ -388,8 +387,8 @@ void CscreenrecorderDlg::OnBnClickedBnpause()
 	{
 		UpdateData();
 		globalvars::rstatus = Record;
-		globalvars::bKeepCursor = bool(m_RecordCursor == TRUE);
-		m_Bnpause.SetWindowTextW(_T("暂停录制(F3)"));
+		globalvars::bKeepCursor = m_RecordCursor == TRUE;
+		m_Bnpause.SetWindowText(_T("暂停录制(F3)"));
 		m_Bnstart.EnableWindow(FALSE);
 		m_Bnpause.EnableWindow(TRUE);
 		m_Bnend.EnableWindow(TRUE);
@@ -416,7 +415,7 @@ void CscreenrecorderDlg::OnBnClickedBnend()
 			if (globalvars::rstatus == Pause)
 			{
 				KillTimer(Rec);
-				m_Bnpause.SetWindowTextW(_T("暂停录制(F3)"));
+				m_Bnpause.SetWindowText(_T("暂停录制(F3)"));
 				SaveAVI();
 				FinishAVI();
 				CString tmp;
@@ -435,11 +434,11 @@ void CscreenrecorderDlg::OnBnClickedBnend()
 			globalvars::rstatus = Stop;
 		}
 	}
-	catch (error_description e)
+	catch (std::exception& e)
 	{
 		auto err = GetLastError();
 		CString msg;
-		msg.Format(_T("发生错误：%s\n错误号：%lu"), e, err);
+		msg.Format(_T("发生错误：%hs\n错误号：%lu"), e.what(), err);
 		MessageBox(msg, _T("错误"), MB_OK | MB_ICONERROR);
 		throw;
 	}
@@ -463,11 +462,11 @@ afx_msg LRESULT CscreenrecorderDlg::OnWimData(WPARAM wParam, LPARAM lParam)
 			WimData(wParam, lParam);
 		}
 	}
-	catch (error_description e)
+	catch (std::exception& e)
 	{
 		auto err = GetLastError();
 		CString msg;
-		msg.Format(_T("发生错误：%s\n错误号：%lu"), e, err);
+		msg.Format(_T("发生错误：%hs\n错误号：%lu"), e.what(), err);
 		MessageBox(msg, _T("错误"), MB_OK | MB_ICONERROR);
 		throw;
 	}
@@ -490,11 +489,11 @@ afx_msg LRESULT CscreenrecorderDlg::OnWimOpen(WPARAM wParam, LPARAM lParam)
 	{
 		WimOpen();
 	}
-	catch (error_description e)
+	catch (std::exception& e)
 	{
 		auto err = GetLastError();
 		CString msg;
-		msg.Format(_T("发生错误：%s\n错误号：%lu"), e, err);
+		msg.Format(_T("发生错误：%hs\n错误号：%lu"), e.what(), err);
 		MessageBox(msg, _T("错误"), MB_OK | MB_ICONERROR);
 		throw;
 	}
@@ -517,11 +516,11 @@ afx_msg LRESULT CscreenrecorderDlg::OnWimClose(WPARAM wParam, LPARAM lParam)
 	{
 		WimClose();
 	}
-	catch (error_description e)
+	catch (std::exception& e)
 	{
 		auto err = GetLastError();
 		CString msg;
-		msg.Format(_T("发生错误：%s\n错误号：%lu"), e, err);
+		msg.Format(_T("发生错误：%hs\n错误号：%lu"), e.what(), err);
 		MessageBox(msg, _T("错误"), MB_OK | MB_ICONERROR);
 		throw;
 	}

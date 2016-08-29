@@ -1,8 +1,5 @@
 #pragma once
 
-// 错误描述的类型
-typedef TCHAR* error_description;
-
 typedef unsigned int uint;
 
 /*
@@ -54,7 +51,7 @@ uint GetnFrames();
 	参数说明：
 	ss：	位图句柄
 */
-void PushScreenShotStack(HBITMAP const& ss);
+void PushScreenShotStack(HBITMAP ss);
 
 /*
 	准备打开录音

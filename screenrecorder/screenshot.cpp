@@ -69,20 +69,20 @@ HBITMAP GetScreenShot(HDC hDCscr, HDC hDCout, RECT const& scrrect, RECT const& o
 	HBITMAP mbmp = CreateCompatibleBitmap(hDCscr, outrect.right - outrect.left, outrect.bottom - outrect.top);
 	if (mbmp == nullptr)
 	{
-		throw _T("无法创建位图");
+		throw std::runtime_error("无法创建位图");
 	}
 	if (SelectObject(hDCout, mbmp) == nullptr)
 	{
-		throw _T("无法选中对象");
+		throw std::runtime_error("无法选中对象");
 	}
 	BITMAP mbitmap;
 	if (!GetObject(mbmp, sizeof(BITMAP), &mbitmap))
 	{
-		throw _T("无法获得位图信息");
+		throw std::runtime_error("无法获得位图信息");
 	}
 	if (!StretchBlt(hDCout, 0, 0, mbitmap.bmWidth, mbitmap.bmHeight, hDCscr, 0, 0, scrrect.right - scrrect.left, scrrect.bottom - scrrect.top, SRCCOPY))
 	{
-		throw _T("位块转换或传送到目标设备上下文失败");
+		throw std::runtime_error("位块转换或传送到目标设备上下文失败");
 	}
 
 	if (bKeepcursor)
@@ -90,12 +90,12 @@ HBITMAP GetScreenShot(HDC hDCscr, HDC hDCout, RECT const& scrrect, RECT const& o
 		POINT cpos;
 		if (!GetCursorPos(&cpos))
 		{
-			throw _T("无法获得鼠标位置");
+			throw std::runtime_error("无法获得鼠标位置");
 		}
 		HICON cicon = GetCursor();
 		if (!DrawIcon(hDCout, cpos.x, cpos.y, cicon))
 		{
-			throw _T("绘制鼠标时发生错误");
+			throw std::runtime_error("绘制鼠标时发生错误");
 		}
 	}
 
@@ -112,7 +112,7 @@ uint GetnFrames()
 	return globalvars::nFrames;
 }
 
-void PushScreenShotStack(HBITMAP const& ss)
+void PushScreenShotStack(HBITMAP ss)
 {
 	globalvars::ScreenShotStack.push_back(ss);
 }
@@ -122,7 +122,7 @@ bool CanRecordAudio(DWORD format)
 	WAVEINCAPS twic;
 	waveInGetDevCaps(globalvars::AudioDeviceID, &twic, sizeof(twic));
 
-	return ((twic.dwFormats & format) != (DWORD)NULL);
+	return (twic.dwFormats & format) != static_cast<DWORD>(NULL);
 }
 
 bool CreateAudioStream()
@@ -133,7 +133,7 @@ bool CreateAudioStream()
 	globalvars::aasi.dwSampleSize = globalvars::AudioFormat.nBlockAlign;
 	globalvars::aasi.dwSuggestedBufferSize = globalvars::AudioFormat.nSamplesPerSec;
 
-	return (AVIFileCreateStream(globalvars::pfile, &globalvars::pas, &globalvars::aasi) == AVIERR_OK);
+	return AVIFileCreateStream(globalvars::pfile, &globalvars::pas, &globalvars::aasi) == AVIERR_OK;
 }
 
 bool CreateAudioBuffer(DWORD size)
@@ -161,14 +161,14 @@ bool CreateAudioBuffer(DWORD size)
 		{
 			globalvars::pWaveHeader[i].reset();
 			globalvars::pAudioBuffer[i].clear();
-			throw _T("无法准备音频头");
+			throw std::runtime_error("无法准备音频头");
 		}
 
 		if (waveInAddBuffer(globalvars::hMic,globalvars::pWaveHeader[i].get(), sizeof(WAVEHDR)) != MMSYSERR_NOERROR)
 		{
 			globalvars::pWaveHeader[i].reset();
 			globalvars::pAudioBuffer[i].clear();
-			throw _T("无法在缓存头部添加音频头");
+			throw std::runtime_error("无法在缓存头部添加音频头");
 		}
 	}
 
@@ -231,17 +231,17 @@ void InitAVI(HDC hDCout, HWND hWnd, LPCTSTR filename, DWORD quality, bool record
 		{
 			if (waveInOpen(&globalvars::hMic, globalvars::AudioDeviceID, &globalvars::AudioFormat, (DWORD)hWnd, NULL, CALLBACK_WINDOW) != MMSYSERR_NOERROR)
 			{
-				throw _T("无法打开设备");
+				throw std::runtime_error("无法打开设备");
 			}
 
 			if (!CreateAudioStream())
 			{
-				throw _T("无法创建音频流");
+				throw std::runtime_error("无法创建音频流");
 			}
 
 			if (AVIStreamSetFormat(globalvars::pas, 0, &globalvars::AudioFormat, sizeof(WAVEFORMATEX) + globalvars::AudioFormat.cbSize) != AVIERR_OK)
 			{
-				throw _T("无法设置音频流格式");
+				throw std::runtime_error("无法设置音频流格式");
 			}
 
 			waveInStart(globalvars::hMic);
@@ -360,13 +360,13 @@ void WimData(WPARAM wParam, LPARAM lParam)
 
 	if (pHdr == nullptr)
 	{
-		throw _T("音频头为空");
+		throw std::runtime_error("音频头为空");
 	}
 
 	Samples = pHdr->dwBytesRecorded;
 	if (waveInUnprepareHeader(hwi, pHdr, sizeof(WAVEHDR)) != MMSYSERR_NOERROR)
 	{
-		throw _T("不能取消音频头准备");
+		throw std::runtime_error("不能取消音频头准备");
 	}
 
 	if (AVIStreamWrite(globalvars::pas, globalvars::AudioStreamPos, Samples, pHdr->lpData, pHdr->dwBytesRecorded, AVIIF_KEYFRAME, NULL, NULL) == MMSYSERR_NOERROR)
@@ -375,16 +375,16 @@ void WimData(WPARAM wParam, LPARAM lParam)
 	}
 	else
 	{
-		throw _T("无法写入avi流");
+		throw std::runtime_error("无法写入avi流");
 	}
 
 	if (waveInPrepareHeader(hwi, pHdr, sizeof(WAVEHDR)) != MMSYSERR_NOERROR)
 	{
-		throw _T("无法准备音频头");
+		throw std::runtime_error("无法准备音频头");
 	}
 
 	if (waveInAddBuffer(hwi, pHdr, sizeof(WAVEHDR)) != MMSYSERR_NOERROR)
 	{
-		throw _T("无法在缓存头部添加音频头");
+		throw std::runtime_error("无法在缓存头部添加音频头");
 	}
 }
